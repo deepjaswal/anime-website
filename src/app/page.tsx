@@ -30,6 +30,7 @@ export const metadata: Metadata = {
         url: siteConfig.defaultOgImage,
         width: 1200,
         height: 630,
+        type: "image/jpeg",
         alt: `${siteConfig.name} Homepage - Top Anime and Reviews`,
       },
     ],
