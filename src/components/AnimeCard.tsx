@@ -32,7 +32,8 @@ export default function AnimeCard({ anime, onOpenTrailer, priorityRank }: AnimeC
       >
         <img
           src={posterUrl}
-          alt={displayTitle}
+          alt={`${displayTitle} - Watch Trailer, Ratings & Reviews`}
+          title={`${displayTitle} Anime details`}
           onError={() => setImgError(true)}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
           loading="lazy"

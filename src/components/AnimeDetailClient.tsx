@@ -13,6 +13,7 @@ import {
   Building,
   ExternalLink,
   ChevronLeft,
+  ChevronRight,
   Check,
   Clock,
   Sparkles,
@@ -41,6 +42,35 @@ export default function AnimeDetailClient({
   const [copied, setCopied] = useState(false);
   const [showFullSynopsis, setShowFullSynopsis] = useState(false);
   const [userReviews, setUserReviews] = useState<AnimeReview[]>(reviews);
+
+  // Review Pagination & Filter state
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsFilter, setReviewsFilter] = useState<"all" | "highest" | "lowest">("all");
+  const [expandedReviewIds, setExpandedReviewIds] = useState<Set<number>>(new Set());
+
+  const REVIEWS_PER_PAGE = 3;
+
+  const toggleReviewExpand = (id: number) => {
+    setExpandedReviewIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const filteredAndSortedReviews = [...userReviews].sort((a, b) => {
+    if (reviewsFilter === "highest") return (b.score || 0) - (a.score || 0);
+    if (reviewsFilter === "lowest") return (a.score || 0) - (b.score || 0);
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  });
+
+  const totalReviewsCount = filteredAndSortedReviews.length;
+  const totalReviewPages = Math.max(1, Math.ceil(totalReviewsCount / REVIEWS_PER_PAGE));
+  const currentReviews = filteredAndSortedReviews.slice(
+    (reviewsPage - 1) * REVIEWS_PER_PAGE,
+    reviewsPage * REVIEWS_PER_PAGE
+  );
 
   const isBookmarked = isInWatchlist(anime.mal_id);
   const displayTitle = anime.title_english || anime.title;
@@ -451,83 +481,200 @@ export default function AnimeDetailClient({
               )}
             </div>
 
-            {/* USER & COMMUNITY REVIEWS SECTION */}
-            <div className="p-6 rounded-3xl bg-[#0e1224]/85 border border-white/[0.08] shadow-xl space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-white/[0.06]">
+            {/* USER & COMMUNITY REVIEWS SECTION WITH COMPLETE PAGINATION */}
+            <div id="reviews-section" className="p-6 rounded-3xl bg-[#0e1224]/85 border border-white/[0.08] shadow-xl space-y-6">
+              {/* Header with Title, Count badge and Filter Tabs */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/[0.06]">
                 <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-rose-400" />
-                    Community Reviews & Discussion
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5 text-rose-400" />
+                      Community Reviews &amp; Discussion
+                    </h2>
+                    <span className="px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold">
+                      {totalReviewsCount} {totalReviewsCount === 1 ? "Review" : "Reviews"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">
                     Verified critic analysis, fan discussions, and community ratings worldwide
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-emerald-950/70 text-emerald-300 border border-emerald-800/40 text-[11px] font-bold tracking-wide flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Verified Feedback
-                  </span>
+
+                {/* Filter Tabs (All, Highest Score, Lowest Score) */}
+                <div className="flex items-center gap-1 p-1 bg-[#070914] rounded-xl border border-white/[0.07] shrink-0 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReviewsFilter("all");
+                      setReviewsPage(1);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      reviewsFilter === "all"
+                        ? "bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md shadow-rose-600/30"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    All ({userReviews.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReviewsFilter("highest");
+                      setReviewsPage(1);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      reviewsFilter === "highest"
+                        ? "bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md shadow-rose-600/30"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Highest ⭐
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReviewsFilter("lowest");
+                      setReviewsPage(1);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      reviewsFilter === "lowest"
+                        ? "bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md shadow-rose-600/30"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Lowest
+                  </button>
                 </div>
               </div>
 
               {/* Reviews List */}
               <div className="space-y-4">
-                {userReviews.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-4 text-center">
-                    Loading verified community discussion...
+                {currentReviews.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-6 text-center">
+                    No reviews found for this filter.
                   </p>
                 ) : (
-                  userReviews.map((rev) => (
-                    <div
-                      key={rev.mal_id}
-                      className="p-5 rounded-2xl bg-[#070914] border border-white/[0.06] hover:border-white/10 space-y-3 transition-colors shadow-md"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          {rev.user.images?.jpg?.image_url ? (
-                            <img
-                              src={rev.user.images.jpg.image_url}
-                              alt={rev.user.username}
-                              className="w-9 h-9 rounded-full object-cover border border-rose-500/30"
-                            />
-                          ) : (
-                            <div className="w-9 h-9 rounded-full bg-rose-950/80 text-rose-300 border border-rose-800/50 flex items-center justify-center text-xs font-bold">
-                              {rev.user.username.slice(0, 1).toUpperCase()}
-                            </div>
-                          )}
-                          <div>
-                            <span className="font-bold text-sm text-white block">
-                              {rev.user.username}
-                            </span>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              {rev.tags && rev.tags.length > 0 && (
-                                <span className="px-2 py-0.2 rounded-md bg-rose-950/60 text-rose-300 border border-rose-800/40 text-[10px] font-bold">
-                                  {rev.tags[0]}
+                  currentReviews.map((rev) => {
+                    const isExpanded = expandedReviewIds.has(rev.mal_id);
+                    const isLongText = rev.review.length > 300;
+                    const displayText = isLongText && !isExpanded ? rev.review.slice(0, 300) + "..." : rev.review;
+
+                    return (
+                      <div
+                        key={rev.mal_id}
+                        className="p-5 rounded-2xl bg-[#070914] border border-white/[0.06] hover:border-white/10 space-y-3 transition-colors shadow-md"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            {rev.user.images?.jpg?.image_url ? (
+                              <img
+                                src={rev.user.images.jpg.image_url}
+                                alt={rev.user.username}
+                                className="w-10 h-10 rounded-full object-cover border border-rose-500/30 ring-1 ring-white/10 shrink-0"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-950 to-indigo-950 text-rose-300 border border-rose-800/50 flex items-center justify-center text-xs font-bold shrink-0">
+                                {rev.user.username.slice(0, 1).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm text-white">
+                                  {rev.user.username}
                                 </span>
-                              )}
-                              <span className="text-[11px] text-slate-500">
+                                {rev.tags && rev.tags.length > 0 && (
+                                  <span className="px-2 py-0.5 rounded-md bg-rose-950/60 text-rose-300 border border-rose-800/40 text-[10px] font-bold">
+                                    {rev.tags[0]}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-slate-500 mt-0.5 block">
                                 {new Date(rev.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                               </span>
                             </div>
                           </div>
+
+                          {rev.score && (
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/60 border border-amber-500/30 text-xs font-black text-amber-300 shadow-sm shrink-0">
+                              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                              <span>{rev.score} / 10</span>
+                            </div>
+                          )}
                         </div>
 
-                        {rev.score && (
-                          <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-black/60 border border-amber-500/30 text-xs font-black text-amber-300 shadow-sm">
-                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                            <span>{rev.score} / 10</span>
+                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-1 sm:pl-13">
+                          {displayText}
+                        </p>
+
+                        {isLongText && (
+                          <div className="pl-1 sm:pl-13 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => toggleReviewExpand(rev.mal_id)}
+                              className="text-xs font-bold text-rose-400 hover:text-rose-300 underline underline-offset-4 cursor-pointer"
+                            >
+                              {isExpanded ? "Show Less" : "Read Full Review"}
+                            </button>
                           </div>
                         )}
                       </div>
-
-                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-12">
-                        {rev.review}
-                      </p>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
+
+              {/* REVIEWS PAGINATION CONTROLS */}
+              {totalReviewPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/[0.06]">
+                  {/* Reviews status counter */}
+                  <div className="text-xs text-slate-400">
+                    Showing <span className="text-white font-bold">{(reviewsPage - 1) * REVIEWS_PER_PAGE + 1}</span>–
+                    <span className="text-white font-bold">{Math.min(reviewsPage * REVIEWS_PER_PAGE, totalReviewsCount)}</span> of{" "}
+                    <span className="text-white font-bold">{totalReviewsCount}</span> reviews
+                  </div>
+
+                  {/* Pagination Buttons */}
+                  <div className="flex items-center gap-1.5">
+                    {/* Previous Button */}
+                    <button
+                      type="button"
+                      disabled={reviewsPage === 1}
+                      onClick={() => setReviewsPage((p) => Math.max(1, p - 1))}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#070914] text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/20 disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      Prev
+                    </button>
+
+                    {/* Numeric Page Buttons */}
+                    {Array.from({ length: totalReviewPages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setReviewsPage(pageNum)}
+                        className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          reviewsPage === pageNum
+                            ? "bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md shadow-rose-600/35 ring-1 ring-rose-400/30"
+                            : "bg-[#070914] text-slate-400 hover:text-white hover:bg-white/[0.05] border border-white/[0.07]"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+
+                    {/* Next Button */}
+                    <button
+                      type="button"
+                      disabled={reviewsPage === totalReviewPages}
+                      onClick={() => setReviewsPage((p) => Math.min(totalReviewPages, p + 1))}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#070914] text-slate-300 hover:text-white border border-white/[0.08] hover:border-white/20 disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
+                    >
+                      Next
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

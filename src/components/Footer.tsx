@@ -9,18 +9,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand info */}
           <div className="md:col-span-2 space-y-4">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 via-red-600 to-indigo-900 text-white shadow-md shadow-rose-600/30">
-                <Flame className="w-5 h-5 fill-white" />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-black text-white">
-                  Anime<span className="text-gradient-anime">Vault</span>
-                </span>
-                <span className="px-2 py-0.5 rounded-md bg-rose-950/80 text-[10px] text-rose-300 border border-rose-700/40 font-bold">
-                  India
-                </span>
-              </div>
+            <Link href="/" className="flex items-center gap-2">
+              <span className="text-xl font-black text-white">
+                Anime<span className="text-gradient-anime">Vault</span>
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-rose-950/80 text-[10px] text-rose-300 border border-rose-700/40 font-bold">
+                India
+              </span>
             </Link>
             <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
               India&apos;s premier anime discovery &amp; review hub. Explore authentic ratings, community reviews, official trailers, and where to watch legally in India.

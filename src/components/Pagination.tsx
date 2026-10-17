@@ -45,7 +45,6 @@ export default function Pagination({
   const handlePageClick = (page: number) => {
     if (page === currentPage || isLoading || page < 1 || page > lastPage) return;
     onPageChange(page);
-    window.scrollTo({ top: 380, behavior: "smooth" });
   };
 
   return (

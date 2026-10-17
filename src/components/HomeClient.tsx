@@ -9,6 +9,7 @@ import FilterTabs, { FilterTabType } from "./FilterTabs";
 import SearchBar from "./SearchBar";
 import TrailerModal from "./TrailerModal";
 import Pagination from "./Pagination";
+import SeoContentSection from "./SeoContentSection";
 import { AnimeItem, PaginationInfo } from "@/lib/types";
 import { Sparkles, Trophy, Flame, Play, ArrowRight, Dices, Layers } from "lucide-react";
 import Link from "next/link";
@@ -88,25 +89,25 @@ function HomeContent({ initialAnime, genres, initialPagination }: HomeClientProp
     fetchAnime(newSearch, newTab, newGenre, newPage);
   }, [searchParams, fetchAnime]);
 
-  // Handle Tab Switch (clears search, resets genre, sets page to 1)
+  // Handle Tab Switch (clears search, resets genre, sets page to 1 without top scroll)
   const handleTabChange = (newTab: FilterTabType) => {
     setActiveTab(newTab);
     setSearchQuery("");
     setSelectedGenre(undefined);
     setCurrentPage(1);
     fetchAnime("", newTab, undefined, 1);
-    router.push(`/?tab=${newTab}&page=1`);
+    router.push(`/?tab=${newTab}&page=1`, { scroll: false });
   };
 
-  // Handle Genre Switch
+  // Handle Genre Switch (without top scroll)
   const handleGenreChange = (newGenre: number | undefined) => {
     setSelectedGenre(newGenre);
     setCurrentPage(1);
     fetchAnime(searchQuery, activeTab, newGenre, 1);
     if (newGenre !== undefined) {
-      router.push(`/?tab=${activeTab}&genre=${newGenre}&page=1`);
+      router.push(`/?tab=${activeTab}&genre=${newGenre}&page=1`, { scroll: false });
     } else {
-      router.push(`/?tab=${activeTab}&page=1`);
+      router.push(`/?tab=${activeTab}&page=1`, { scroll: false });
     }
   };
 
@@ -116,13 +117,13 @@ function HomeContent({ initialAnime, genres, initialPagination }: HomeClientProp
     setCurrentPage(1);
     fetchAnime(query, activeTab, selectedGenre, 1);
     if (query.trim()) {
-      router.push(`/?search=${encodeURIComponent(query.trim())}&page=1`);
+      router.push(`/?search=${encodeURIComponent(query.trim())}&page=1`, { scroll: false });
     } else {
-      router.push(`/?tab=${activeTab}&page=1`);
+      router.push(`/?tab=${activeTab}&page=1`, { scroll: false });
     }
   };
 
-  // Handle Pagination change
+  // Handle Pagination change (without jumping to top)
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
     fetchAnime(searchQuery, activeTab, selectedGenre, newPage);
@@ -133,7 +134,7 @@ function HomeContent({ initialAnime, genres, initialPagination }: HomeClientProp
       url += `&tab=${activeTab}`;
       if (selectedGenre !== undefined) url += `&genre=${selectedGenre}`;
     }
-    router.push(url);
+    router.push(url, { scroll: false });
   };
 
   // Featured highlights for hero carousel
@@ -283,6 +284,9 @@ function HomeContent({ initialAnime, genres, initialPagination }: HomeClientProp
           isLoading={isLoading}
         />
       </section>
+
+      {/* SEO Content & FAQ Accordion Section (Boosts Google Keyword Rankings & Rich Snippets) */}
+      <SeoContentSection />
 
       {/* Trailer Modal (Always plays working video) */}
       {selectedTrailer && (
