@@ -44,13 +44,14 @@ export function generateWebSiteJsonLd() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: siteConfig.name,
+    alternateName: ["Anime Vault", "AnimeVault India", "AnimeVault App", "AnimeVault Online"],
     url: SITE_URL,
     description: siteConfig.description,
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${SITE_URL}/?q={search_term_string}`,
+        urlTemplate: `${SITE_URL}/?search={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },
@@ -66,12 +67,62 @@ export function generateOrganizationJsonLd() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteConfig.name,
+    alternateName: ["Anime Vault", "AnimeVault India"],
     url: SITE_URL,
-    logo: `${SITE_URL}/favicon.ico`,
+    logo: `${SITE_URL}/icon.png`,
     description: siteConfig.description,
+    slogan: "Modern Anime Database, Verified Reviews & Official Trailers",
+    knowsAbout: [
+      "Anime",
+      "Manga",
+      "Japanese Animation",
+      "Anime Reviews",
+      "Anime Streaming Platforms",
+      "MyAnimeList Ratings",
+    ],
     sameAs: [
       "https://twitter.com/animevault",
-      "https://github.com",
+      "https://github.com/deepjaswal/anime-website",
+    ],
+  };
+}
+
+/**
+ * 3. Site Navigation Elements (Google Sitelinks under main search result)
+ */
+export function generateNavigationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: [
+      {
+        "@type": "SiteNavigationElement",
+        position: 1,
+        name: "Top Airing Anime",
+        description: "Explore currently airing anime series and weekly episodes",
+        url: `${SITE_URL}/?tab=airing`,
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 2,
+        name: "Most Popular Anime",
+        description: "Browse all-time highest-rated and most popular anime shows",
+        url: `${SITE_URL}/?tab=bypopularity`,
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 3,
+        name: "Anime Categories & Genres",
+        description: "Discover anime by 70+ genres including Action, Fantasy, Sci-Fi, and Romance",
+        url: `${SITE_URL}/categories`,
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 4,
+        name: "Personal Watchlist",
+        description: "Save and track your favorite anime titles in your personal library",
+        url: `${SITE_URL}/watchlist`,
+      },
     ],
   };
 }

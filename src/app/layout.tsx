@@ -3,7 +3,7 @@ import { Poppins, Righteous } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { WatchlistProvider } from "@/components/WatchlistContext";
-import JsonLd, { generateWebSiteJsonLd, generateOrganizationJsonLd } from "@/components/JsonLd";
+import JsonLd, { generateWebSiteJsonLd, generateOrganizationJsonLd, generateNavigationJsonLd } from "@/components/JsonLd";
 import { SITE_URL, siteConfig } from "@/lib/seo-config";
 import "./globals.css";
 
@@ -112,10 +112,14 @@ export const metadata: Metadata = {
   // 10. Webmaster Verification: Google Search Console, Bing Webmaster tools token
   verification: siteConfig.verification,
 
-  // 11. Icons: Browser tab favicon
+  // 11. Icons: Modern crisp anime favicon
   icons: {
-    icon: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico" },
+    ],
+    apple: "/icon.svg",
   },
 };
 
@@ -134,6 +138,8 @@ export default function RootLayout({
         <JsonLd data={generateWebSiteJsonLd()} />
         {/* Organization Knowledge Graph Structured Data */}
         <JsonLd data={generateOrganizationJsonLd()} />
+        {/* Google Sitelinks Navigation Elements */}
+        <JsonLd data={generateNavigationJsonLd()} />
       </head>
       <body className="min-h-screen flex flex-col bg-[#060813] text-slate-100 selection:bg-rose-600 selection:text-white font-sans antialiased">
         <WatchlistProvider>

@@ -226,10 +226,15 @@ export default function HeroBanner({ featuredAnime, onOpenTrailer }: HeroBannerP
             </span>
           </div>
 
-          {/* Anime Title */}
-          <h1 className="font-banner text-3xl sm:text-5xl lg:text-6xl text-white tracking-wide leading-tight mb-2 drop-shadow-2xl font-normal">
-            {displayTitle}
+          {/* Primary Semantic H1 for Google Brand Authority */}
+          <h1 className="sr-only">
+            AnimeVault - Modern Anime Database, Reviews &amp; Official HD Trailers
           </h1>
+
+          {/* Featured Anime Title */}
+          <h2 className="font-banner text-3xl sm:text-5xl lg:text-6xl text-white tracking-wide leading-tight mb-2 drop-shadow-2xl font-normal">
+            {displayTitle}
+          </h2>
 
           {current.title_japanese && (
             <p className="text-sm sm:text-base text-slate-400 font-sans mb-3 drop-shadow">

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0e1329" />
+      <stop offset="100%" stop-color="#04060d" />
+    </linearGradient>
+
+    <!-- Glowing Anime Flame/Neon Gradient -->
+    <linearGradient id="neonRose" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb7185" />
+      <stop offset="50%" stop-color="#f43f5e" />
+      <stop offset="100%" stop-color="#e11d48" />
+    </linearGradient>
+
+    <!-- Accent Gold Gradient -->
+    <linearGradient id="goldAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+
+    <!-- Glow Filter for Authentic Anime Sparkle -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Outer Rounded Squircle with Rose Border -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bgGrad)" stroke="#f43f5e" stroke-width="2.5" stroke-opacity="0.85" />
+
+  <!-- Inner Soft Glow Aura -->
+  <circle cx="32" cy="32" r="22" fill="#f43f5e" opacity="0.12" />
+
+  <!-- Dynamic Stylized Anime "AV" (AnimeVault) Emblem with Katana Cuts -->
+  <path d="M 17 46 L 29 18 L 35 18 L 23 46 Z" fill="url(#neonRose)" filter="url(#glow)" />
+  <path d="M 47 46 L 35 18 L 29 18 L 41 46 Z" fill="url(#neonRose)" opacity="0.9" />
+
+  <!-- Sharp Katana Slash / Crossbar in Gold -->
+  <polygon points="21,34 43,30 41,35 19,39" fill="url(#goldAccent)" filter="url(#glow)" />
+
+  <!-- Sparkling Anime Star at the Peak -->
+  <circle cx="32" cy="18" r="2.5" fill="#ffffff" filter="url(#glow)" />
+  <circle cx="43" cy="22" r="1.5" fill="#fb7185" />
+</svg>
