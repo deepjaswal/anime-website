@@ -20,7 +20,7 @@ export const siteConfig = {
   name: "AnimeVault",
 
   // Visible Brand Title
-  defaultTitle: "AnimeVault - Watch Official Trailers, Anime Ratings & Database",
+  defaultTitle: "AnimeVault – Discover Anime, Explore Ratings & Find Your Next Favorite Anime ",
 
   titleTemplate: "%s | AnimeVault",
 

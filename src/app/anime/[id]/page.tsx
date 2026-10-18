@@ -1,11 +1,59 @@
-import { getAnimeById, getAnimeReviews, getAnimeStreaming } from "@/lib/jikan";
+import { getAnimeById, getAnimeReviews, getAnimeStreaming, getTopAnime } from "@/lib/jikan";
 import AnimeDetailClient from "@/components/AnimeDetailClient";
 import JsonLd, { generateAnimeJsonLd, generateBreadcrumbJsonLd } from "@/components/JsonLd";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { SITE_URL, siteConfig } from "@/lib/seo-config";
 
-export const dynamic = "force-dynamic";
+/**
+ * ==============================================================================
+ * ISR (Incremental Static Regeneration)
+ * ==============================================================================
+ * force-dynamic ke bajay ISR use kar rahe hain:
+ * - Pages pehli baar serve hote hain, phir 24 ghante tak cache mein rehte hain.
+ * - Isse Google ko real static HTML milta hai jo rank karne mein madad karta hai.
+ * - 86400 seconds = 24 hours
+ */
+export const revalidate = 86400;
+
+/**
+ * ==============================================================================
+ * STATIC PARAMS (Pre-render Top 100 Anime at Build Time)
+ * ==============================================================================
+ * Ye function build ke time pe top 100 anime pages ko pre-render karta hai.
+ * Matlab Google ko instantly crawlable HTML milti hai — bina server request wait ke.
+ * Jab koi "Naruto", "Attack on Titan" search kare, Google humara page dhundh lega.
+ */
+export async function generateStaticParams() {
+  try {
+    // Top 50 trending + top 50 most popular anime
+    const [trendingRes, popularRes] = await Promise.allSettled([
+      getTopAnime("airing", 1, 50),
+      getTopAnime("bypopularity", 1, 50),
+    ]);
+
+    const seenIds = new Set<string>();
+    const params: { id: string }[] = [];
+
+    const allAnime = [
+      ...(trendingRes.status === "fulfilled" ? trendingRes.value.data : []),
+      ...(popularRes.status === "fulfilled" ? popularRes.value.data : []),
+    ];
+
+    for (const anime of allAnime) {
+      const id = String(anime.mal_id);
+      if (!seenIds.has(id)) {
+        seenIds.add(id);
+        params.push({ id });
+      }
+    }
+
+    return params;
+  } catch (err) {
+    console.error("[generateStaticParams] Failed:", err);
+    return [];
+  }
+}
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -47,16 +95,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     anime.images.jpg.image_url ||
     siteConfig.defaultOgImage;
 
-  // SEO keywords anime specific
+  // SEO keywords anime-specific — jab koi Google pe anime ka naam search kare
   const genreNames = anime.genres?.map((g) => g.name) || [];
+  const studioNames = anime.studios?.map((s) => s.name) || [];
   const animeKeywords = [
-    title,
-    anime.title_japanese || "",
-    `${title} anime review`,
-    `${title} trailer`,
-    `${title} episodes`,
-    `${title} score`,
+    title,                                      // English title
+    anime.title_japanese || "",                  // Japanese title (native speakers)
+    anime.title,                                 // Romaji title
+    `${title} anime`,                            // "Attack on Titan anime"
+    `${title} review`,                           // "Naruto review"
+    `${title} trailer`,                          // "Demon Slayer trailer"
+    `${title} episodes`,                         // "One Piece episodes"
+    `${title} watch online`,                     // "Dragon Ball watch online"
+    `${title} streaming`,                        // "Bleach streaming"
+    `${title} ${releaseYear}`,                   // "Jujutsu Kaisen 2023"
+    `${title} rating`,                           // "AOT rating"
+    `${title} score`,                            // "Berserk score"
+    `where to watch ${title}`,                   // Featured Snippet bait
+    `is ${title} worth watching`,                // Long-tail intent
     ...genreNames,
+    ...studioNames,
     ...siteConfig.keywords,
   ].filter(Boolean);
 

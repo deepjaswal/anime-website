@@ -9,28 +9,37 @@ import { getTopAnime } from "@/lib/jikan";
  * Googlebot aur Bingbot is file ko read karke website ke saare URLs discover karte hain.
  * Next.js automatically is TypeScript file ko XML format me serve karta hai:
  * https://your-domain.com/sitemap.xml
+ *
+ * Jab koi Google pe kisi bhi anime ka naam search kare (e.g. "Naruto", "Attack on Titan"),
+ * Google pehle sitemap me us URL ko dhundh ke index karta hai.
+ * Jitne zyada anime URLs sitemap mein honge, utne zyada anime search queries pe
+ * humara page Google me dikhe ga!
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const currentDate = new Date();
 
-  // 1. Static Pages & Core Landing Pages
+  // ─────────────────────────────────────────────────────────────────────
+  // 1. STATIC PAGES (Homepage, Categories)
+  // ─────────────────────────────────────────────────────────────────────
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: SITE_URL,
       lastModified: currentDate,
       changeFrequency: "daily",
-      priority: 1.0, // Primary homepage
+      priority: 1.0, // Homepage = sabse zyada priority
     },
     {
       url: `${SITE_URL}/categories`,
       lastModified: currentDate,
       changeFrequency: "weekly",
-      priority: 0.85, // Categories main directory
+      priority: 0.85,
     },
   ];
 
-  // 2. High-Intent Genre Pages (Action, Comedy, Fantasy, Sci-Fi, etc.)
-  const genreIds = [1, 2, 4, 8, 10, 14, 22, 24, 30, 37];
+  // ─────────────────────────────────────────────────────────────────────
+  // 2. GENRE FILTER PAGES (Action, Comedy, Fantasy, Horror, Romance…)
+  // ─────────────────────────────────────────────────────────────────────
+  const genreIds = [1, 2, 4, 7, 8, 10, 14, 22, 24, 30, 36, 37, 41];
   const genreRoutes: MetadataRoute.Sitemap = genreIds.map((id) => ({
     url: `${SITE_URL}/categories?genre=${id}`,
     lastModified: currentDate,
@@ -38,36 +47,49 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.75,
   }));
 
-  // 3. Dynamic High-Traffic Anime Detail Pages
-  // Airing + Most Popular Anime ko sitemap me index karna
+  // ─────────────────────────────────────────────────────────────────────
+  // 3. ANIME DETAIL PAGES — 600+ unique anime URLs for Google indexing
+  // ─────────────────────────────────────────────────────────────────────
+  // 4 pages × 50 items × 3 filters = up to 600 unique anime pages
+  // Google jab inhe index kare ga to individual anime name searches rank honge
   const seenIds = new Set<number>();
   const animeRoutes: MetadataRoute.Sitemap = [];
 
   try {
-    const [airingRes, popularRes] = await Promise.allSettled([
-      getTopAnime("airing", 1, 25),
-      getTopAnime("bypopularity", 1, 25),
-    ]);
+    // 3 filters × 4 pages × 50 items = up to 600 unique anime
+    // bypopularity = all-time popular (Naruto, One Piece, AOT, etc.)
+    // airing       = currently trending anime
+    // favorite     = highest scored anime of all time
+    const pageNumbers = [1, 2, 3, 4];
+    const filters = ["bypopularity", "airing", "favorite"] as const;
 
-    const allAnime = [
-      ...(airingRes.status === "fulfilled" && airingRes.value?.data ? airingRes.value.data : []),
-      ...(popularRes.status === "fulfilled" && popularRes.value?.data ? popularRes.value.data : []),
-    ];
+    const allFetchPromises = filters.flatMap((filter) =>
+      pageNumbers.map((page) => getTopAnime(filter, page, 50))
+    );
 
-    for (const anime of allAnime) {
-      if (!seenIds.has(anime.mal_id)) {
-        seenIds.add(anime.mal_id);
-        animeRoutes.push({
-          url: `${SITE_URL}/anime/${anime.mal_id}`,
-          lastModified: currentDate,
-          changeFrequency: "weekly",
-          priority: 0.9, // High priority for individual anime pages
-        });
+    const results = await Promise.allSettled(allFetchPromises);
+
+    for (const result of results) {
+      if (result.status === "fulfilled" && result.value?.data) {
+        for (const anime of result.value.data) {
+          if (!seenIds.has(anime.mal_id)) {
+            seenIds.add(anime.mal_id);
+            animeRoutes.push({
+              url: `${SITE_URL}/anime/${anime.mal_id}`,
+              lastModified: currentDate,
+              changeFrequency: "weekly",
+              // High priority — ye pages actual anime name search queries pe rank karte hain
+              priority: 0.9,
+            });
+          }
+        }
       }
     }
   } catch (error) {
-    console.error("Failed to fetch anime for sitemap generation:", error);
+    console.error("[Sitemap] Failed to fetch anime:", error);
   }
 
+  // Final sitemap = Static pages + Genre pages + All anime detail pages
   return [...staticRoutes, ...genreRoutes, ...animeRoutes];
 }
+

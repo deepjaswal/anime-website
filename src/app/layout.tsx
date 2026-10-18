@@ -113,14 +113,16 @@ export const metadata: Metadata = {
   // 10. Webmaster Verification: Google Search Console, Bing Webmaster tools token
   verification: siteConfig.verification,
 
-  // 11. Icons: Modern crisp anime favicon
+  // 11. Icons: Modern crisp anime favicon + 512×512 brand logo for Google
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
       { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/favicon.ico" },
+      { url: "/logo.png", sizes: "512x512", type: "image/png" }, // Google logo
     ],
     apple: "/icon.svg",
+    shortcut: "/logo.png",
   },
 };
 

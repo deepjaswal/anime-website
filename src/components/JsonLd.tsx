@@ -59,19 +59,46 @@ export function generateWebSiteJsonLd() {
 }
 
 /**
- * 2. Organization Schema
- * Brand authority, logo, aur Google Knowledge Graph inclusion ke liye
+ * 2. Organization Schema — Google Knowledge Graph & Logo
+ * ==============================================================================
+ * Ye schema Google ko brand ki puri identity batata hai:
+ * - Logo: Google search results ke side mein brand logo dikhata hai
+ * - ImageObject: Google ko exact logo dimensions provide karta hai (required!)
+ * - sameAs: Social profiles se brand authority verify hoti hai
+ *
+ * Google Logo Requirements:
+ *   ✅ Min 112×112px  ✅ Max 1MB  ✅ Square recommended  ✅ Hosted on same domain
  */
 export function generateOrganizationJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteConfig.name,
-    alternateName: ["Anime Vault", "AnimeVault India"],
+    alternateName: ["Anime Vault", "AnimeVault India", "AnimeVault App"],
     url: SITE_URL,
-    logo: `${SITE_URL}/icon.png`,
+
+    // ✅ Google-required ImageObject format for logo (plain URL kaam nahi karta!)
+    // Google is logo ko Knowledge Panel aur search results me dikhata hai
+    logo: {
+      "@type": "ImageObject",
+      url: `${SITE_URL}/logo.png`,    // public/logo.png — 512×512px brand logo
+      width: 512,
+      height: 512,
+      caption: "AnimeVault — Modern Anime Database & Reviews",
+    },
+
+    // Ye bhi add karo taaki Google favicon bhi index kare
+    image: {
+      "@type": "ImageObject",
+      url: `${SITE_URL}/logo.png`,
+      width: 512,
+      height: 512,
+    },
+
     description: siteConfig.description,
     slogan: "Modern Anime Database, Verified Reviews & Official Trailers",
+
+    // Google Knowledge Graph mein "Knows About" topics show hote hain
     knowsAbout: [
       "Anime",
       "Manga",
@@ -79,7 +106,12 @@ export function generateOrganizationJsonLd() {
       "Anime Reviews",
       "Anime Streaming Platforms",
       "MyAnimeList Ratings",
+      "Anime Database",
+      "Otaku Culture",
     ],
+
+    // sameAs se Google brand ki authenticity verify karta hai
+    // Jitne zyada verified profiles, utna strong Knowledge Panel
     sameAs: [
       "https://twitter.com/animevault",
       "https://github.com/deepjaswal/anime-website",
@@ -148,6 +180,11 @@ export function generateFaqJsonLd(faqs: FaqItem[]) {
 /**
  * 4. Anime Schema (TVSeries ya Movie)
  * Specific anime ke liye Rich Snippet generate karta hai (Ratings, episodes, genres, etc.)
+ *
+ * Ye schema Google ko batata hai ki ye content kya hai aur kaise rank karna hai:
+ * - countryOfOrigin: Japan — "anime" searches ke liye helpful
+ * - inLanguage: Japanese — anime-specific queries target karta hai
+ * - creator: Studio name — brand authority signals
  */
 export function generateAnimeJsonLd(anime: AnimeItem) {
   const isMovie = anime.type?.toLowerCase() === "movie";
@@ -158,12 +195,22 @@ export function generateAnimeJsonLd(anime: AnimeItem) {
     "@context": "https://schema.org",
     "@type": isMovie ? "Movie" : "TVSeries",
     name: title,
-    alternateName: anime.title_japanese || anime.title,
+    // alternateName: Romaji + Japanese title dono — Japanese/native searchers ke liye
+    alternateName: [
+      anime.title_japanese,
+      anime.title !== title ? anime.title : null,
+    ].filter(Boolean),
     description: anime.synopsis || `${title} details, reviews, and trailer.`,
     image: image ? [image] : undefined,
     url: `${SITE_URL}/anime/${anime.mal_id}`,
     genre: anime.genres?.map((g) => g.name) || [],
     contentRating: anime.rating || undefined,
+    // Google ko batata hai ye Japanese animation hai
+    countryOfOrigin: {
+      "@type": "Country",
+      name: "Japan",
+    },
+    inLanguage: "ja", // Japanese — anime-specific ranking signal
   };
 
   // Release year/date
@@ -200,9 +247,14 @@ export function generateAnimeJsonLd(anime: AnimeItem) {
     };
   }
 
-  // Animation Studio / Production
+  // Animation Studio / Production Company (Creator authority signals)
   if (anime.studios && anime.studios.length > 0) {
     schema.productionCompany = anime.studios.map((s) => ({
+      "@type": "Organization",
+      name: s.name,
+    }));
+    // creator field — search engines ke liye extra studio authority signal
+    schema.creator = anime.studios.map((s) => ({
       "@type": "Organization",
       name: s.name,
     }));
@@ -210,6 +262,7 @@ export function generateAnimeJsonLd(anime: AnimeItem) {
 
   return schema;
 }
+
 
 /**
  * 5. BreadcrumbList Schema
